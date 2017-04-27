@@ -1,11 +1,23 @@
 Package: aertidywells
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Version: 0.0.0.9000
+Title: Convert the Official AER Well List into a Tidy Tibble
+Description: Converts the official AER well list into a Tidy Tibble. It takes 
+            care of the process of relationally joining the data tables 
+            describing well status, business associates, and field to the main
+            well list.
+Author: person("Everett", "Robinson", email = "evjrob@gmail.com"
+                role = c("aut", "cre"))
+Imports:
+  dplyr,
+  lubridate,
+  magrittr,
+  readr,
+  stringr,
+  tibble,
+  tidyr
+Depends:
+  magrittr
+License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
