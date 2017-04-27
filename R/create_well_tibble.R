@@ -1,21 +1,33 @@
 
-create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = TRUE, long_status_description = FALSE, remove_ba_contacts = TRUE) {
-  # Takes the WellList.txt file provided by the Alberta Energy Regulator and converts it to a tidy tibble with all of the code columns
-  # replaced with their full descriptions and other detailed information from the supplementary data files and documents.
+create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = TRUE,
+                               long_status_description = FALSE, remove_ba_contacts = TRUE) {
+  # Takes the WellList.txt file provided by the Alberta Energy Regulator and
+  # converts it to a tidy tibble with all of the code columns replaced with
+  # their full descriptions and other detailed information from the
+  # supplementary data files and documents.
   #
   # Args:
-  #   remove_code_cols: Removes the original code columns from the final tibble so that their associated data columns will be returned.
-  #   remove_original_dates: Removes the date columns containing the date in its original string format.
-  #   long_status_description: Use the longer status descriptions provided by the AER. Ex; CRUDE OIL vs CR-OIL.
-  #   remove_ba_contacts: Removes the contact information for each business associate such as address and phone number.
+  #   remove_code_cols: Removes the original code columns from the final
+  #                     tibble so that their associated data columns will
+  #                     be returned.
+  #   remove_original_dates: Removes the date columns containing the date
+  #                     in its original string format.
+  #   long_status_description: Use the longer status descriptions provided
+  #                     by the AER. Ex; CRUDE OIL vs CR-OIL.
+  #   remove_ba_contacts: Removes the contact information for each business
+  #                     associate such as address and phone number.
   #
   # Returns:
-  #   A tibble in which all of the relevant information contained in extra tables and documents has been relationally joined to the
-  #   official AER well list.
+  #   A tibble in which all of the relevant information contained in
+  #   extra tables and documents has been relationally joined to the official AER
+  #   well list.
 
-  # Column Names are sourced from the official layout doucument (https://www.aer.ca/documents/sts/St37-Listofwellslayout.pdf)
-  # for the Alberta Energy Regulator WellList.txt file (https://www.aer.ca/documents/sts/ST37.zip)
-  # The layout is only provided as a pdf and split across multpiple pages so I can't see a reasonable method to automate it's extraction.
+  # Column Names are sourced from the official layout doucument
+  # (https://www.aer.ca/documents/sts/St37-Listofwellslayout.pdf) for the
+  # Alberta Energy Regulator WellList.txt file
+  # (https://www.aer.ca/documents/sts/ST37.zip) The layout is only provided as a
+  # pdf and split across multpiple pages so I can't see a reasonable method to
+  # automate it's extraction.
   well_list_col_names <- c("UWI-DISPLAY-FORMAT",
                            "KEY-LIST-OF-WELLS",
                            "UPDATE-FLAG",
@@ -36,8 +48,10 @@ create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = 
                            "WELL-STAT-DATE"
   )
 
-  # Pre-defined col_types to prevent the yyyymmdd formatted dates from being turned into integers and to make sure WELL-TOTAL-DEPTH
-  # is parsed as a double. These types will make it easier to transform the data into a more usable form later.
+  # Pre-defined col_types to prevent the yyyymmdd formatted dates from being
+  # turned into integers and to make sure WELL-TOTAL-DEPTH is parsed as a
+  # double. These types will make it easier to transform the data into a more
+  # usable form later.
   well_list_col_types <- list(readr::col_character(), # UWI-DISPLAY-FORMAT
                               readr::col_character(), # KEY-LIST-OF-WELLS
                               readr::col_character(), # UPDATE-FLAG
@@ -60,7 +74,8 @@ create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = 
 
   well_list <- readr::read_tsv("extdata/WellList.txt", col_names = well_list_col_names, col_types = well_list_col_types)
 
-  # UPDATE-FLAG is a defunct field that is no longer populated with data so it can be removed.
+  # UPDATE-FLAG is a defunct field that is no longer populated with data so it
+  # can be removed.
   well_list <- well_list %>% dplyr::select(-`UPDATE-FLAG`)
 
   well_list <- add_field(well_list)
@@ -87,9 +102,10 @@ create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = 
 }
 
 convert_aer_dates <- function(well_list) {
-  # Converting the dates from simple yyyymmdd strings to real dates is easy with lubridate. Approximately 4000 records with final drill
-  # dates of "00000000" have been converted to NAs. This doesn't appear to be an issue and converting these non-dates to NAs seems
-  # reasonable.
+  # Converting the dates from simple yyyymmdd strings to real dates is easy with
+  # lubridate. Approximately 4000 records with final drill dates of "00000000"
+  # have been converted to NAs. This doesn't appear to be an issue and
+  # converting these non-dates to NAs seems reasonable.
   well_list <- well_list %>% dplyr::rename(`ORIGINAL-LICENSE-ISSUE-DATE` = `LICENSE-ISSUE-DATE`)
   well_list <- well_list %>% dplyr::mutate(`LICENSE-ISSUE-DATE` = lubridate::ymd(`ORIGINAL-LICENSE-ISSUE-DATE`))
   well_list <- well_list %>% dplyr::mutate(`FINAL-DRILL-DATE` = lubridate::ymd(`FIN-DRL-DATE`))
@@ -100,25 +116,27 @@ convert_aer_dates <- function(well_list) {
 
 add_aer_status <- function(well_list, long_status_description) {
 
-  # These well status code tables are necessary to turn the "WELL-STAT-CODE" column into human readble statuses later.
-  # The csv files were extracted from the above layout document using tabula (http://tabula.technology/)
+  # These well status code tables are necessary to turn the "WELL-STAT-CODE"
+  # column into human readble statuses later. The csv files were extracted from
+  # the above layout document using tabula (http://tabula.technology/)
   well_status_codes_fluid <- readr::read_csv("extdata/well_status_codes_fluid.csv")
   well_status_codes_mode <- readr::read_csv("extdata/well_status_codes_mode.csv")
   well_status_codes_type <- readr::read_csv("extdata/well_status_codes_type.csv")
   well_status_codes_structure <- readr::read_csv("extdata/well_status_codes_structure.csv")
 
-  # Splitting the four components of the well status into their own columns makes it simple to left join the descriptive versions
-  # to the table later.
+  # Splitting the four components of the well status into their own columns
+  # makes it simple to left join the descriptive versions to the table later.
   well_list <- well_list %>% tidyr::separate(`WELL-STAT-CODE`, into = c("FLUID-CODE", "MODE-CODE", "TYPE-CODE", "STRUCTURE-CODE", "UNUSED-STATUS-CODE"), sep = c(2,4,6,8), convert = TRUE)
 
-  # Using the left_join functions provided by dplyr, because they are similar to SQL that I'm familiar with.
+  # Using the left_join functions provided by dplyr, because they are similar to
+  # SQL that I'm familiar with.
   well_list <- well_list %>% dplyr::left_join(well_status_codes_fluid %>% dplyr::rename(FLUID = `Short Description`, `FLUID-LONG` = Description), c("FLUID-CODE" = "Value"))
   well_list <- well_list %>% dplyr::left_join(well_status_codes_mode %>% dplyr::rename(MODE = `Short Description`, `MODE-LONG` = Description), c("MODE-CODE" = "Value"))
   well_list <- well_list %>% dplyr::left_join(well_status_codes_type %>% dplyr::rename(TYPE = `Short Description`, `TYPE-LONG` = Description), c("TYPE-CODE" = "Value"))
   well_list <- well_list %>% dplyr::left_join(well_status_codes_fluid %>% dplyr::rename(STRUCTURE = `Short Description`, `STRUCTURE-LONG` = Description), c("STRUCTURE-CODE" = "Value"))
 
-  # There is a fifth status code column that currently only contains the value "00" and appears to be unused. There should be no issues
-  # with removing it.
+  # There is a fifth status code column that currently only contains the value
+  # "00" and appears to be unused. There should be no issues with removing it.
   well_list <- well_list %>% dplyr::select(-`UNUSED-STATUS-CODE`)
 
   if (long_status_description == TRUE) {
@@ -134,15 +152,20 @@ add_aer_status <- function(well_list, long_status_description) {
 
 add_business_associates <- function(well_list) {
 
-  # The Business Asscoiate codes are used to map Licensee, Operator, and Agent codes to proper business names and contact information
-  # https://www.aer.ca/data-and-publications/statistical-reports/st104
-  # The imported excel file contains some junk data due to a two row merged cell header, and a bunch of disclaimers at the bottom of
-  # the file, I remove these by filtering the BA column code for a regex that matches any four character combination of alphanumerics
+  # The Business Asscoiate codes are used to map Licensee, Operator, and Agent
+  # codes to proper business names and contact information
+  # https://www.aer.ca/data-and-publications/statistical-reports/st104 The
+  # imported excel file contains some junk data due to a two row merged cell
+  # header, and a bunch of disclaimers at the bottom of the file, I remove these
+  # by filtering the BA column code for a regex that matches any four character
+  # combination of alphanumerics
   business_associate_codes <- readxl::read_excel("extdata/BusinessAssociate_Codes.xlsx", skip = 2)
   business_associate_codes <- business_associate_codes %>% dplyr::filter(stringr::str_detect(.$`BA Code`, "^....$"))
 
-  # The well list from the AER comes with a five character long licensee, operator, and agent code whereas the business associate codes are
-  # only five charaters long. The well list codes appear to always be padded with an extra zero on the end.
+  # The well list from the AER comes with a five character long licensee,
+  # operator, and agent code whereas the business associate codes are only five
+  # charaters long. The well list codes appear to always be padded with an extra
+  # zero on the end.
   well_list <- well_list %>% dplyr::mutate(`LICENSEE-CODE` = stringr::str_sub(`LICENSEE-CODE`, 1, 4))
   well_list <- well_list %>% dplyr::mutate(`AGENT-CODE` = stringr::str_sub(`AGENT-CODE`, 1, 4))
   well_list <- well_list %>% dplyr::mutate(`OPERATOR-CODE` = stringr::str_sub(`OPERATOR-CODE`, 1, 4))
@@ -156,7 +179,8 @@ add_business_associates <- function(well_list) {
 
 add_field <- function(well_list) {
 
-  # The Field and pool code files are sourced in delimited format from https://www.aer.ca/data-and-publications/statistical-reports/st103
+  # The Field and pool code files are sourced in delimited format from
+  # https://www.aer.ca/data-and-publications/statistical-reports/st103
   # http://aer.ca/data/codes/FieldList.txt
   well_field_codes <- readr::read_tsv("extdata/FieldList.txt")
 
@@ -177,10 +201,13 @@ add_pool <- function(well_list) {
   # http://aer.ca/data/codes/CommingledPoolList.txt
   #well_commingled_pool_codes <- read_tsv("extdata/CommingledPoolList.txt")
 
-  # I'm not entirely sure about the Pool Codes. There are 232 Production Pool Codes that occur in the well list that do no appear to occur
-  # in the well_pool_codes table. I am also not entirely sure whether the production or geoloical pool code is the one that should be joined
-  # to the well list pool code. For now I will leave out the pool data when constructing the complete well list. I suspect it is the
-  # production pool and will go with that for now.
+  # I'm not entirely sure about the Pool Codes. There are 232 Production Pool
+  # Codes that occur in the well list that do no appear to occur in the
+  # well_pool_codes table. I am also not entirely sure whether the production or
+  # geoloical pool code is the one that should be joined to the well list pool
+  # code. For now I will leave out the pool data when constructing the complete
+  # well list. I suspect it is the production pool and will go with that for
+  # now.
   well_list <- well_list %>% dplyr::left_join(
     well_pool_codes %>% dplyr::select(-`Field Name`, -`Geological Pool Code`, -`Geological Pool Name`) %>%
       dplyr::distinct() %>% dplyr::rename(`PRODUCTION-POOL` = `Production Pool Name`, CONFIDENTIAL = Confidential),
@@ -204,7 +231,8 @@ add_oilsands_area_deposit <- function(well_list) {
 
 reorder_columns <- function(well_list) {
 
-  # Reorder the columns in well_list to match the order in the raw data file before all the joins occurred.
+  # Reorder the columns in well_list to match the order in the raw data file
+  # before all the joins occurred.
   well_list <- well_list %>% dplyr::select(`UWI-DISPLAY-FORMAT`,
                                     `KEY-LIST-OF-WELLS`,
                                     `WELL-NAME`,
