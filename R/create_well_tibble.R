@@ -1,26 +1,20 @@
-
+#' Create a tibble conatining the official AER well list data.
+#'
+#' @param remove_code_cols A Boolean. Should the original code columns be
+#'   removed from the final tibble?
+#' @param remove_original_dates A Boolean. Should the the columns containing the
+#'   original dates as character vectors be removed?.
+#' @param long_status_description A Boolean. Should the longer status
+#'   descriptions provided by the AER be used?
+#' @param remove_ba_contacts A Boolean. Should the additional business associate
+#'   contact info such as address and phone number be removed?
+#' @return A tibble of the well list data with all the supporting data joined to
+#'   the appropriate records.
+#' @examples
+#' create_well_tibble()
+#' create_well_tibble(remove_code_cols = FALSE, remove_original_dates = FALSE, long_status_description = TRUE, remove_ba_contacts = FALSE)
 create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = TRUE,
                                long_status_description = FALSE, remove_ba_contacts = TRUE) {
-  # Takes the WellList.txt file provided by the Alberta Energy Regulator and
-  # converts it to a tidy tibble with all of the code columns replaced with
-  # their full descriptions and other detailed information from the
-  # supplementary data files and documents.
-  #
-  # Args:
-  #   remove_code_cols: Removes the original code columns from the final
-  #                     tibble so that their associated data columns will
-  #                     be returned.
-  #   remove_original_dates: Removes the date columns containing the date
-  #                     in its original string format.
-  #   long_status_description: Use the longer status descriptions provided
-  #                     by the AER. Ex; CRUDE OIL vs CR-OIL.
-  #   remove_ba_contacts: Removes the contact information for each business
-  #                     associate such as address and phone number.
-  #
-  # Returns:
-  #   A tibble in which all of the relevant information contained in
-  #   extra tables and documents has been relationally joined to the official AER
-  #   well list.
 
   # Column Names are sourced from the official layout doucument
   # (https://www.aer.ca/documents/sts/St37-Listofwellslayout.pdf) for the
@@ -101,6 +95,11 @@ create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = 
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Converts the provided date strings to real dates
+#'
+#' @param well_list A tibble containing the well_list with unconverted dates
+#' @return The well tibble with additional columns containing the properly converted dates
+#' @example convert_aer_dates(well_list)
 convert_aer_dates <- function(well_list) {
   # Converting the dates from simple yyyymmdd strings to real dates is easy with
   # lubridate. Approximately 4000 records with final drill dates of "00000000"
@@ -114,6 +113,14 @@ convert_aer_dates <- function(well_list) {
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Left joins the status data to the tibble.
+#'
+#' @param well_list A tibble containing the well_list with status codes
+#' @param long_status_description A Boolean. Should the longer status
+#'   descriptions provided by the AER be used?
+#' @return The well tibble with additional columns containing the components of
+#'   the well status
+#' @example add_aer_status(well_list)
 add_aer_status <- function(well_list, long_status_description) {
 
   # These well status code tables are necessary to turn the "WELL-STAT-CODE"
@@ -149,7 +156,13 @@ add_aer_status <- function(well_list, long_status_description) {
   return(well_list)
 }
 
-
+#' A helper function for create_well_tibble(). Left joins the business associate data to the tibble.
+#'
+#' @param well_list A tibble containing the well_list with business associate codes
+#' @return The well tibble with additional columns containing the licensee,
+#'   agent, and operator data.
+#'
+#' @example add_business_associates(well_list)
 add_business_associates <- function(well_list) {
 
   # The Business Asscoiate codes are used to map Licensee, Operator, and Agent
@@ -177,6 +190,12 @@ add_business_associates <- function(well_list) {
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Left joins the field data to the tibble.
+#'
+#' @param well_list A tibble containing the well_list with field codes
+#' @return The well tibble with additional columns containing the field and field centre
+#'
+#' @example add_field(well_list)
 add_field <- function(well_list) {
 
   # The Field and pool code files are sourced in delimited format from
@@ -193,6 +212,12 @@ add_field <- function(well_list) {
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Left joins the pool data to the tibble.
+#'
+#' @param well_list A tibble containing the well_list with field codes
+#' @return The well tibble with additional columns containing the pool and confidential flag
+#'
+#' @example add_pool(well_list)
 add_pool <- function(well_list) {
 
   # http://aer.ca/data/codes/FieldPoolList.txt
@@ -216,6 +241,13 @@ add_pool <- function(well_list) {
   return(well_list)
 }
 
+
+#' A helper function for create_well_tibble(). Left joins the oilsands area and deposit data to the tibble.
+#'
+#' @param well_list A tibble containing the well_list with os area and deposit codes
+#' @return The well tibble with additional columns containing the oilsands area and deposit
+#'
+#' @example add_oilsands_area_deposit(well_list)
 add_oilsands_area_deposit <- function(well_list) {
 
   # Oilsands area and deposit codes
@@ -229,6 +261,12 @@ add_oilsands_area_deposit <- function(well_list) {
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Reorder the columns in the AER well tibble to match the order provided in WellList.txt
+#'
+#' @param well_list A tibble containing the well_list with field codes
+#' @return The well tibble with columns that follow the orginal order
+#'
+#' @example reorder_columns(well_list)
 reorder_columns <- function(well_list) {
 
   # Reorder the columns in well_list to match the order in the raw data file
@@ -279,18 +317,36 @@ reorder_columns <- function(well_list) {
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Remove the unconverted original date columns.
+#'
+#' @param well_list A tibble containing the expanded well_list
+#' @return The well tibble with original date columns removed
+#'
+#' @example remove_original_date_columns(well_list)
 remove_original_date_columns <- function(well_list) {
   well_list <- well_list %>% dplyr::select(-`ORIGINAL-LICENSE-ISSUE-DATE`, -`FIN-DRL-DATE`, -`WELL-STAT-DATE`)
 
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Remove the business associate contact columns.
+#'
+#' @param well_list A tibble containing the expanded well_list
+#' @return The well tibble with business associate contact information removed
+#'
+#' @example remove_ba_contact_columns(well_list)
 remove_ba_contact_columns <- function(well_list) {
   well_list <- well_list %>% dplyr::select(-`LICENSEE-ADDRESS`, -`LICENSEE-PHONE`, -`AGENT-ADDRESS`, -`AGENT-PHONE`, -`OPERATOR-ADDRESS`, - `OPERATOR-PHONE`)
 
   return(well_list)
 }
 
+#' A helper function for create_well_tibble(). Remove the code columns used to join status, field, pool etc.
+#'
+#' @param well_list A tibble containing the expanded well_list
+#' @return The well tibble with all code columns removed.
+#'
+#' @example remove_code_columns(well_list)
 remove_code_columns <- function(well_list) {
   well_list <- well_list %>% dplyr::select(-`FLUID-CODE`, -`MODE-CODE`, -`TYPE-CODE`, -`STRUCTURE-CODE`)
   well_list <- well_list %>% dplyr::select(-`LICENSEE-CODE`, -`AGENT-CODE`, -`OPERATOR-CODE`)
