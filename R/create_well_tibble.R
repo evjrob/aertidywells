@@ -107,7 +107,7 @@ convert_aer_dates <- function(well_list) {
   # converting these non-dates to NAs seems reasonable.
   well_list <- well_list %>% dplyr::rename(`ORIGINAL-LICENSE-ISSUE-DATE` = `LICENSE-ISSUE-DATE`)
   well_list <- well_list %>% dplyr::mutate(`LICENSE-ISSUE-DATE` = lubridate::ymd(`ORIGINAL-LICENSE-ISSUE-DATE`))
-  well_list <- well_list %>% dplyr::mutate(`FINAL-DRILL-DATE` = lubridate::ymd(`FIN-DRL-DATE`))
+  well_list <- well_list %>% dplyr::mutate(`FINAL-DRILL-DATE` = lubridate::ymd(`FIN-DRL-DATE`, quiet = TRUE))
   well_list <- well_list %>% dplyr::mutate(`WELL-STATUS-DATE` = lubridate::ymd(`WELL-STAT-DATE`))
 
   return(well_list)
