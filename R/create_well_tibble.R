@@ -13,6 +13,7 @@
 #' @examples
 #' create_well_tibble()
 #' create_well_tibble(remove_code_cols = FALSE, remove_original_dates = FALSE, long_status_description = TRUE, remove_ba_contacts = FALSE)
+#' @export
 create_well_tibble <- function(remove_code_cols = TRUE, remove_original_dates = TRUE,
                                long_status_description = FALSE, remove_ba_contacts = TRUE) {
 
