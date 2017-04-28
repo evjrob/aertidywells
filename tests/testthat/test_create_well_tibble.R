@@ -8,6 +8,10 @@ test_that("create_well_tibble produces a tibble with the same number of rows as 
   expect_equal(tibble_row_count, file_row_count)
 })
 
+test_that("create_well_tibble produces an error if the necessary data is not present in the specified data directory", {
+  expect_error(create_well_tibble("not a directory"))
+})
+
 test_that("convert_aer_dates produces a warning if any LICENSE-ISSUE-DATEs dont convert nicely", {
   well_list <- tribble(
     ~`LICENSE-ISSUE-DATE`, ~`FIN-DRL-DATE`, ~`WELL-STAT-DATE`,

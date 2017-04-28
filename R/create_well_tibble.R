@@ -68,18 +68,18 @@ create_well_tibble <- function(data_dir = "extdata/", remove_code_cols = TRUE, r
                               readr::col_character()  # WELL-STAT-DATE
   )
 
-  well_list <- readr::read_tsv("extdata/WellList.txt", col_names = well_list_col_names, col_types = well_list_col_types)
+  well_list <- readr::read_tsv(stringr::str_c(data_dir,"/WellList.txt"), col_names = well_list_col_names, col_types = well_list_col_types)
 
   # UPDATE-FLAG is a defunct field that is no longer populated with data so it
   # can be removed.
   well_list <- well_list %>% dplyr::select(-`UPDATE-FLAG`)
 
-  well_list <- add_field(well_list)
-  well_list <- add_pool(well_list)
-  well_list <- add_oilsands_area_deposit(well_list)
+  well_list <- add_field(well_list, data_dir)
+  well_list <- add_pool(well_list, data_dir)
+  well_list <- add_oilsands_area_deposit(well_list, data_dir)
   well_list <- convert_aer_dates(well_list)
-  well_list <- add_aer_status(well_list, long_status_description)
-  well_list <- add_business_associates(well_list)
+  well_list <- add_aer_status(well_list, data_dir, long_status_description)
+  well_list <- add_business_associates(well_list, data_dir)
   well_list <- reorder_columns(well_list)
 
   if (remove_original_dates == TRUE) {
@@ -100,6 +100,7 @@ create_well_tibble <- function(data_dir = "extdata/", remove_code_cols = TRUE, r
 #' A helper function for create_well_tibble(). Converts the provided date strings to real dates
 #'
 #' @param well_list A tibble containing the well_list with unconverted dates
+#' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the properly converted dates
 #' @example convert_aer_dates(well_list)
 convert_aer_dates <- function(well_list) {
@@ -118,12 +119,13 @@ convert_aer_dates <- function(well_list) {
 #' A helper function for create_well_tibble(). Left joins the status data to the tibble.
 #'
 #' @param well_list A tibble containing the well_list with status codes
+#' @param data_dir A path to a directory containing the necessary AER data files.
 #' @param long_status_description A Boolean. Should the longer status
 #'   descriptions provided by the AER be used?
 #' @return The well tibble with additional columns containing the components of
 #'   the well status
-#' @example add_aer_status(well_list)
-add_aer_status <- function(well_list, long_status_description) {
+#' @example add_aer_status(well_list, data_dir, long_status_description = FALSE)
+add_aer_status <- function(well_list, data_dir, long_status_description) {
 
   status_col_types <- list(readr::col_integer(),   # Value
                            readr::col_character(), # Short Description
@@ -133,10 +135,10 @@ add_aer_status <- function(well_list, long_status_description) {
   # These well status code tables are necessary to turn the "WELL-STAT-CODE"
   # column into human readble statuses later. The csv files were extracted from
   # the above layout document using tabula (http://tabula.technology/)
-  well_status_codes_fluid <- readr::read_csv("extdata/well_status_codes_fluid.csv", col_types = status_col_types)
-  well_status_codes_mode <- readr::read_csv("extdata/well_status_codes_mode.csv", col_types = status_col_types)
-  well_status_codes_type <- readr::read_csv("extdata/well_status_codes_type.csv", col_types = status_col_types)
-  well_status_codes_structure <- readr::read_csv("extdata/well_status_codes_structure.csv", col_types = status_col_types)
+  well_status_codes_fluid <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_fluid.csv"), col_types = status_col_types)
+  well_status_codes_mode <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_mode.csv"), col_types = status_col_types)
+  well_status_codes_type <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_type.csv"), col_types = status_col_types)
+  well_status_codes_structure <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_structure.csv"), col_types = status_col_types)
 
   # Splitting the four components of the well status into their own columns
   # makes it simple to left join the descriptive versions to the table later.
@@ -166,11 +168,12 @@ add_aer_status <- function(well_list, long_status_description) {
 #' A helper function for create_well_tibble(). Left joins the business associate data to the tibble.
 #'
 #' @param well_list A tibble containing the well_list with business associate codes
+#' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the licensee,
 #'   agent, and operator data.
 #'
-#' @example add_business_associates(well_list)
-add_business_associates <- function(well_list) {
+#' @example add_business_associates(well_list, data_dir)
+add_business_associates <- function(well_list, data_dir) {
 
   # The Business Asscoiate codes are used to map Licensee, Operator, and Agent
   # codes to proper business names and contact information
@@ -179,7 +182,7 @@ add_business_associates <- function(well_list) {
   # header, and a bunch of disclaimers at the bottom of the file, I remove these
   # by filtering the BA column code for a regex that matches any four character
   # combination of alphanumerics
-  business_associate_codes <- readxl::read_excel("extdata/BusinessAssociate_Codes.xlsx", skip = 2)
+  business_associate_codes <- readxl::read_excel(stringr::str_c(data_dir,"BusinessAssociate_Codes.xlsx"), skip = 2)
   business_associate_codes <- business_associate_codes %>% dplyr::filter(stringr::str_detect(.$`BA Code`, "^....$"))
 
   # The well list from the AER comes with a five character long licensee,
@@ -200,10 +203,11 @@ add_business_associates <- function(well_list) {
 #' A helper function for create_well_tibble(). Left joins the field data to the tibble.
 #'
 #' @param well_list A tibble containing the well_list with field codes
+#' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the field and field centre
 #'
-#' @example add_field(well_list)
-add_field <- function(well_list) {
+#' @example add_field(well_list, data_dir)
+add_field <- function(well_list, data_dir) {
 
   # Defining the column types ensures the file gets parsed correctly
   field_col_types <- list(readr::col_integer(),   # Field Code
@@ -215,7 +219,7 @@ add_field <- function(well_list) {
   # The Field and pool code files are sourced in delimited format from
   # https://www.aer.ca/data-and-publications/statistical-reports/st103
   # http://aer.ca/data/codes/FieldList.txt
-  well_field_codes <- readr::read_tsv("extdata/FieldList.txt", col_types = field_col_types)
+  well_field_codes <- readr::read_tsv(stringr::str_c(data_dir,"FieldList.txt"), col_types = field_col_types)
 
   well_list <- well_list %>% dplyr::left_join(
     well_field_codes %>% dplyr::rename(FIELD = `Field Name`, `FIELD-ABBREV` = `Field Abbrev`, `FIELD-CENTRE` = `Field Centre`),
@@ -229,10 +233,11 @@ add_field <- function(well_list) {
 #' A helper function for create_well_tibble(). Left joins the pool data to the tibble.
 #'
 #' @param well_list A tibble containing the well_list with field codes
+#' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the pool and confidential flag
 #'
-#' @example add_pool(well_list)
-add_pool <- function(well_list) {
+#' @example add_pool(well_list, data_dir)
+add_pool <- function(well_list, data_dir) {
 
   # Defining the column types ensures the file gets parsed correctly
   pool_col_types <- list( readr::col_character(), # Field Name
@@ -245,10 +250,10 @@ add_pool <- function(well_list) {
   )
 
   # http://aer.ca/data/codes/FieldPoolList.txt
-  well_pool_codes <- readr::read_tsv("extdata/FieldPoolList.txt", col_types = pool_col_types)
+  well_pool_codes <- readr::read_tsv(stringr::str_c(data_dir,"FieldPoolList.txt"), col_types = pool_col_types)
 
   # http://aer.ca/data/codes/CommingledPoolList.txt
-  #well_commingled_pool_codes <- read_tsv("extdata/CommingledPoolList.txt")
+  #well_commingled_pool_codes <- read_tsv(stringr::str_c(data_dir,"CommingledPoolList.txt"))
 
   # I'm not entirely sure about the Pool Codes. There are 232 Production Pool
   # Codes that occur in the well list that do no appear to occur in the
@@ -269,10 +274,11 @@ add_pool <- function(well_list) {
 #' A helper function for create_well_tibble(). Left joins the oilsands area and deposit data to the tibble.
 #'
 #' @param well_list A tibble containing the well_list with os area and deposit codes
+#' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the oilsands area and deposit
 #'
-#' @example add_oilsands_area_deposit(well_list)
-add_oilsands_area_deposit <- function(well_list) {
+#' @example add_oilsands_area_deposit(well_list, data_dir)
+add_oilsands_area_deposit <- function(well_list, data_dir) {
 
   # Defining the column types ensures the file gets parsed correctly
   os_area_col_types <- list(readr::col_character(), # AreaCode
@@ -286,8 +292,8 @@ add_oilsands_area_deposit <- function(well_list) {
   )
 
   # Oilsands area and deposit codes
-  oilsands_area_codes <- readr::read_csv("extdata/PRAOilSandsAreaCodes.csv", col_types = os_area_col_types)
-  oilsands_deposit_codes <- readr::read_csv("extdata/PRAOilSandsAreaDepositCodes.csv", col_types = os_dep_col_types)
+  oilsands_area_codes <- readr::read_csv(stringr::str_c(data_dir,"PRAOilSandsAreaCodes.csv"), col_types = os_area_col_types)
+  oilsands_deposit_codes <- readr::read_csv(stringr::str_c(data_dir,"PRAOilSandsAreaDepositCodes.csv"), col_types = os_dep_col_types)
 
   # Oilsands area codes and deposit codes are mostly blank, but some of the well records have codes and values.
   well_list <- well_list %>% dplyr::left_join(oilsands_area_codes %>% dplyr::rename(`OILSANDS-AREA-NAME` = AreaName), c("OS-AREA-CODE" = "AreaCode"))
