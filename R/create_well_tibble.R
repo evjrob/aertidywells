@@ -123,13 +123,18 @@ convert_aer_dates <- function(well_list) {
 #' @example add_aer_status(well_list)
 add_aer_status <- function(well_list, long_status_description) {
 
+  status_col_types <- list(readr::col_integer(),   # Value
+                           readr::col_character(), # Short Description
+                           readr::col_character()  # Description
+  )
+
   # These well status code tables are necessary to turn the "WELL-STAT-CODE"
   # column into human readble statuses later. The csv files were extracted from
   # the above layout document using tabula (http://tabula.technology/)
-  well_status_codes_fluid <- readr::read_csv("extdata/well_status_codes_fluid.csv")
-  well_status_codes_mode <- readr::read_csv("extdata/well_status_codes_mode.csv")
-  well_status_codes_type <- readr::read_csv("extdata/well_status_codes_type.csv")
-  well_status_codes_structure <- readr::read_csv("extdata/well_status_codes_structure.csv")
+  well_status_codes_fluid <- readr::read_csv("extdata/well_status_codes_fluid.csv", col_types = status_col_types)
+  well_status_codes_mode <- readr::read_csv("extdata/well_status_codes_mode.csv", col_types = status_col_types)
+  well_status_codes_type <- readr::read_csv("extdata/well_status_codes_type.csv", col_types = status_col_types)
+  well_status_codes_structure <- readr::read_csv("extdata/well_status_codes_structure.csv", col_types = status_col_types)
 
   # Splitting the four components of the well status into their own columns
   # makes it simple to left join the descriptive versions to the table later.
@@ -198,10 +203,17 @@ add_business_associates <- function(well_list) {
 #' @example add_field(well_list)
 add_field <- function(well_list) {
 
+  # Defining the column types ensures the file gets parsed correctly
+  field_col_types <- list(readr::col_integer(),   # Field Code
+                          readr::col_character(), # Field Name
+                          readr::col_character(), # Field Abbrev
+                          readr::col_character()  # Field Centre
+  )
+
   # The Field and pool code files are sourced in delimited format from
   # https://www.aer.ca/data-and-publications/statistical-reports/st103
   # http://aer.ca/data/codes/FieldList.txt
-  well_field_codes <- readr::read_tsv("extdata/FieldList.txt")
+  well_field_codes <- readr::read_tsv("extdata/FieldList.txt", col_types = field_col_types)
 
   well_list <- well_list %>% dplyr::left_join(
     well_field_codes %>% dplyr::rename(FIELD = `Field Name`, `FIELD-ABBREV` = `Field Abbrev`, `FIELD-CENTRE` = `Field Centre`),
@@ -220,8 +232,18 @@ add_field <- function(well_list) {
 #' @example add_pool(well_list)
 add_pool <- function(well_list) {
 
+  # Defining the column types ensures the file gets parsed correctly
+  pool_col_types <- list( readr::col_character(), # Field Name
+                          readr::col_character(), # Production Pool Name
+                          readr::col_integer(),   # Field Code
+                          readr::col_integer(),   # Production Pool Code
+                          readr::col_integer(),   # Geological Pool Code
+                          readr::col_character(), # Geological Pool Name
+                          readr::col_character()  # Confidential
+  )
+
   # http://aer.ca/data/codes/FieldPoolList.txt
-  well_pool_codes <- readr::read_tsv("extdata/FieldPoolList.txt")
+  well_pool_codes <- readr::read_tsv("extdata/FieldPoolList.txt", col_types = pool_col_types)
 
   # http://aer.ca/data/codes/CommingledPoolList.txt
   #well_commingled_pool_codes <- read_tsv("extdata/CommingledPoolList.txt")
@@ -250,9 +272,20 @@ add_pool <- function(well_list) {
 #' @example add_oilsands_area_deposit(well_list)
 add_oilsands_area_deposit <- function(well_list) {
 
+  # Defining the column types ensures the file gets parsed correctly
+  os_area_col_types <- list(readr::col_character(), # AreaCode
+                            readr::col_character()  # AreaName
+  )
+
+  os_dep_col_types <- list(readr::col_character(), # AreaName
+                           readr::col_character(), # DepositName
+                           readr::col_character(), # AreaCode
+                           readr::col_character()  # DepositCode
+  )
+
   # Oilsands area and deposit codes
-  oilsands_area_codes <- readr::read_csv("extdata/PRAOilSandsAreaCodes.csv")
-  oilsands_deposit_codes <- readr::read_csv("extdata/PRAOilSandsAreaDepositCodes.csv")
+  oilsands_area_codes <- readr::read_csv("extdata/PRAOilSandsAreaCodes.csv", col_types = os_area_col_types)
+  oilsands_deposit_codes <- readr::read_csv("extdata/PRAOilSandsAreaDepositCodes.csv", col_types = os_dep_col_types)
 
   # Oilsands area codes and deposit codes are mostly blank, but some of the well records have codes and values.
   well_list <- well_list %>% dplyr::left_join(oilsands_area_codes %>% dplyr::rename(`OILSANDS-AREA-NAME` = AreaName), c("OS-AREA-CODE" = "AreaCode"))
