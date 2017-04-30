@@ -134,19 +134,6 @@ convert_aer_dates <- function(well_list) {
 #' @example add_aer_status(well_list, data_dir, long_status_description = FALSE)
 add_aer_status <- function(well_list, data_dir, long_status_description) {
 
-  status_col_types <- list(readr::col_integer(),   # Value
-                           readr::col_character(), # Short Description
-                           readr::col_character()  # Description
-  )
-
-  # These well status code tables are necessary to turn the "WELL-STAT-CODE"
-  # column into human readble statuses later. The csv files were extracted from
-  # the above layout document using tabula (http://tabula.technology/)
-  well_status_codes_fluid <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_fluid.csv"), col_types = status_col_types)
-  well_status_codes_mode <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_mode.csv"), col_types = status_col_types)
-  well_status_codes_type <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_type.csv"), col_types = status_col_types)
-  well_status_codes_structure <- readr::read_csv(stringr::str_c(data_dir,"well_status_codes_structure.csv"), col_types = status_col_types)
-
   # Splitting the four components of the well status into their own columns
   # makes it simple to left join the descriptive versions to the table later.
   well_list <- well_list %>% tidyr::separate(`WELL-STAT-CODE`, into = c("FLUID-CODE", "MODE-CODE", "TYPE-CODE", "STRUCTURE-CODE", "UNUSED-STATUS-CODE"), sep = c(2,4,6,8), convert = TRUE)
