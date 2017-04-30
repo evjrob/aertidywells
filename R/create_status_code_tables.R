@@ -1,6 +1,8 @@
 #' Create the internal datatables necessary to interpret the well status codes
 #'
 #' @return Save the necessary data tables to R/sysdata.rda using the files in raw-data/.
+#' @keywords internal
+#' @noRd
 create_status_code_tables <- function() {
   status_col_types <- list( readr::col_integer(),   # Value
                             readr::col_character(), # Short Description

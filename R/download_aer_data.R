@@ -26,6 +26,8 @@ data_file_names = c(well_list = "WellList.txt",
 #' @examples
 #' found_required_files()
 #' found_requred_files(data_dir = "some/other/directory/")
+#' @keywords internal
+#' @noRd
 found_required_files <- function(data_dir) {
   file.exists(stringr::str_c(data_dir, data_file_names))
 }
@@ -36,6 +38,8 @@ found_required_files <- function(data_dir) {
 #' @param missing_file_names The names of the files that were not found.
 #' @param missing_file_urls The urls at which the missing files can be downloaded.
 #' @return A character vector containing messages prompting the user to download any missing files
+#' @keywords internal
+#' @noRd
 required_file_messages <- function(data_dir, missing_file_names, missing_file_urls) {
   stringr::str_c("The file ", missing_file_names, " was not found in ", data_dir, ". Please download it at: ", missing_file_urls, "\n")
 }
@@ -47,6 +51,8 @@ required_file_messages <- function(data_dir, missing_file_names, missing_file_ur
 #' @examples
 #' prompt_user_to_download()
 #' prompt_user_to_download(data_dir = "some/other/directory/")
+#' @keywords internal
+#' @noRd
 prompt_user_to_download <- function(data_dir) {
 
   missing_files <- !found_required_files(data_dir)

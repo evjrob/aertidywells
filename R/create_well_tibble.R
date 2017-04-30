@@ -109,7 +109,8 @@ create_well_tibble <- function(data_dir = "data/", remove_code_cols = TRUE, remo
 #' @param well_list A tibble containing the well_list with unconverted dates
 #' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the properly converted dates
-#' @example convert_aer_dates(well_list)
+#' @keywords internal
+#' @noRd
 convert_aer_dates <- function(well_list) {
   # Converting the dates from simple yyyymmdd strings to real dates is easy with
   # lubridate. Approximately 4000 records with final drill dates of "00000000"
@@ -131,7 +132,8 @@ convert_aer_dates <- function(well_list) {
 #'   descriptions provided by the AER be used?
 #' @return The well tibble with additional columns containing the components of
 #'   the well status
-#' @example add_aer_status(well_list, data_dir, long_status_description = FALSE)
+#' @keywords internal
+#' @noRd
 add_aer_status <- function(well_list, data_dir, long_status_description) {
 
   # Splitting the four components of the well status into their own columns
@@ -165,8 +167,8 @@ add_aer_status <- function(well_list, data_dir, long_status_description) {
 #' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the licensee,
 #'   agent, and operator data.
-#'
-#' @example add_business_associates(well_list, data_dir)
+#' @keywords internal
+#' @noRd
 add_business_associates <- function(well_list, data_dir) {
 
   # The Business Asscoiate codes are used to map Licensee, Operator, and Agent
@@ -199,8 +201,8 @@ add_business_associates <- function(well_list, data_dir) {
 #' @param well_list A tibble containing the well_list with field codes
 #' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the field and field centre
-#'
-#' @example add_field(well_list, data_dir)
+#' @keywords internal
+#' @noRd
 add_field <- function(well_list, data_dir) {
 
   # Defining the column types ensures the file gets parsed correctly
@@ -229,8 +231,8 @@ add_field <- function(well_list, data_dir) {
 #' @param well_list A tibble containing the well_list with field codes
 #' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the pool and confidential flag
-#'
-#' @example add_pool(well_list, data_dir)
+#' @keywords internal
+#' @noRd
 add_pool <- function(well_list, data_dir) {
 
   # Defining the column types ensures the file gets parsed correctly
@@ -270,8 +272,8 @@ add_pool <- function(well_list, data_dir) {
 #' @param well_list A tibble containing the well_list with os area and deposit codes
 #' @param data_dir A path to a directory containing the necessary AER data files.
 #' @return The well tibble with additional columns containing the oilsands area and deposit
-#'
-#' @example add_oilsands_area_deposit(well_list, data_dir)
+#' @keywords internal
+#' @noRd
 add_oilsands_area_deposit <- function(well_list, data_dir) {
 
   # Defining the column types ensures the file gets parsed correctly
@@ -300,8 +302,8 @@ add_oilsands_area_deposit <- function(well_list, data_dir) {
 #'
 #' @param well_list A tibble containing the well_list with field codes
 #' @return The well tibble with columns that follow the orginal order
-#'
-#' @example reorder_columns(well_list)
+#' @keywords internal
+#' @noRd
 reorder_columns <- function(well_list) {
 
   # Reorder the columns in well_list to match the order in the raw data file
@@ -356,8 +358,8 @@ reorder_columns <- function(well_list) {
 #'
 #' @param well_list A tibble containing the expanded well_list
 #' @return The well tibble with original date columns removed
-#'
-#' @example remove_original_date_columns(well_list)
+#' @keywords internal
+#' @noRd
 remove_original_date_columns <- function(well_list) {
   well_list <- well_list %>% dplyr::select(-`ORIGINAL-LICENSE-ISSUE-DATE`, -`FIN-DRL-DATE`, -`WELL-STAT-DATE`)
 
@@ -368,8 +370,8 @@ remove_original_date_columns <- function(well_list) {
 #'
 #' @param well_list A tibble containing the expanded well_list
 #' @return The well tibble with business associate contact information removed
-#'
-#' @example remove_ba_contact_columns(well_list)
+#' @keywords internal
+#' @noRd
 remove_ba_contact_columns <- function(well_list) {
   well_list <- well_list %>% dplyr::select(-`LICENSEE-ADDRESS`, -`LICENSEE-PHONE`, -`AGENT-ADDRESS`, -`AGENT-PHONE`, -`OPERATOR-ADDRESS`, - `OPERATOR-PHONE`)
 
@@ -380,8 +382,8 @@ remove_ba_contact_columns <- function(well_list) {
 #'
 #' @param well_list A tibble containing the expanded well_list
 #' @return The well tibble with all code columns removed.
-#'
-#' @example remove_code_columns(well_list)
+#' @keywords internal
+#' @noRd
 remove_code_columns <- function(well_list) {
   well_list <- well_list %>% dplyr::select(-`FLUID-CODE`, -`MODE-CODE`, -`TYPE-CODE`, -`STRUCTURE-CODE`)
   well_list <- well_list %>% dplyr::select(-`LICENSEE-CODE`, -`AGENT-CODE`, -`OPERATOR-CODE`)

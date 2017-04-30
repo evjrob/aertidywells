@@ -4,10 +4,13 @@
 \alias{create_well_tibble}
 \title{Create a tibble conatining the official AER well list data.}
 \usage{
-create_well_tibble(remove_code_cols = TRUE, remove_original_dates = TRUE,
-  long_status_description = FALSE, remove_ba_contacts = TRUE)
+create_well_tibble(data_dir = "data/", remove_code_cols = TRUE,
+  remove_original_dates = TRUE, long_status_description = FALSE,
+  remove_ba_contacts = TRUE)
 }
 \arguments{
+\item{data_dir}{A path to a directory containing the necessary AER data files.}
+
 \item{remove_code_cols}{A Boolean. Should the original code columns be
 removed from the final tibble?}
 
@@ -29,5 +32,5 @@ Create a tibble conatining the official AER well list data.
 }
 \examples{
 create_well_tibble()
-create_well_tibble(remove_code_cols = FALSE, remove_original_dates = FALSE, long_status_description = TRUE, remove_ba_contacts = FALSE)
+create_well_tibble(data_dir = "some/directory/", remove_code_cols = FALSE, remove_original_dates = FALSE, long_status_description = TRUE, remove_ba_contacts = FALSE)
 }
