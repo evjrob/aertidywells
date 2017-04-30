@@ -18,6 +18,13 @@
 create_well_tibble <- function(data_dir = "extdata/", remove_code_cols = TRUE, remove_original_dates = TRUE,
                                long_status_description = FALSE, remove_ba_contacts = TRUE) {
 
+  # There will be too many issues building the tibble if any of the data files are missing
+  missing_files <- !found_required_files(data_dir)
+  if(any(missing_files)) {
+    prompt_user_to_download(data_dir)
+    stop(stringr::str_c("The required data files we're not found in the specified directory: ", data_dir))
+  }
+
   # Column Names are sourced from the official layout doucument
   # (https://www.aer.ca/documents/sts/St37-Listofwellslayout.pdf) for the
   # Alberta Energy Regulator WellList.txt file
