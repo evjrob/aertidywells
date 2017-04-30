@@ -15,7 +15,7 @@
 #' create_well_tibble()
 #' create_well_tibble(data_dir = "some/directory/", remove_code_cols = FALSE, remove_original_dates = FALSE, long_status_description = TRUE, remove_ba_contacts = FALSE)
 #' @export
-create_well_tibble <- function(data_dir = "extdata/", remove_code_cols = TRUE, remove_original_dates = TRUE,
+create_well_tibble <- function(data_dir = "data/", remove_code_cols = TRUE, remove_original_dates = TRUE,
                                long_status_description = FALSE, remove_ba_contacts = TRUE) {
 
   # There will be too many issues building the tibble if any of the data files are missing
