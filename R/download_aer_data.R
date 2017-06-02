@@ -65,3 +65,35 @@ prompt_user_to_download <- function(data_dir) {
     message(stringr::str_c("All the necessary data files were found in ", data_dir, "."))
   }
 }
+
+#' Attempt to download the the missing files to the specified directory.
+#'
+#' @param data_dir A path to a directory where the necessary AER data files should be saved.
+#' @examples
+#' download_aer_data()
+#' download_aer_data(data_dir = "some/other/directory/")
+#' @export
+download_aer_data <- function(data_dir = "data/") {
+  download_permission <- readline(prompt = stringr::str_c("The required files were not found in the specified directory: ", data_dir, ". Would you like to downlad them now automatically? [Y/n]:"))
+
+  # Check four reasonable inputs that shoud all clearly be interpretted as yes.
+  if (download_permission == "y" || download_permission == "Y" || download_permission == "Yes" || download_permission == "yes") {
+    if (!dir.exists(data_dir)) {
+      dir.create(data_dir)
+    }
+
+    missing_files <- !found_required_files(data_dir)
+    missing_file_names <- data_file_download_names[missing_files]
+    missing_file_urls <- data_file_urls[missing_files]
+
+    for (i in 1:length(missing_file_urls)) {
+      download.file(missing_file_urls[[i]], stringr::str_c(data_dir, missing_file_names[[i]]))
+
+      # The WellList.txt file comes inside a zip archive. The WellList.txt file needs to be extracted.
+      if (names(missing_file_urls)[[i]] == "well_list")
+        unzip(stringr::str_c(data_dir, missing_file_names[[i]]), exdir = data_dir, junkpaths = TRUE)
+    }
+  } else {
+    prompt_user_to_download(data_dir)
+  }
+}

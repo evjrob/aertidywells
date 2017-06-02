@@ -21,8 +21,7 @@ create_well_tibble <- function(data_dir = "data/", remove_code_cols = TRUE, remo
   # There will be too many issues building the tibble if any of the data files are missing
   missing_files <- !found_required_files(data_dir)
   if(any(missing_files)) {
-    prompt_user_to_download(data_dir)
-    stop(stringr::str_c("The required data files we're not found in the specified directory: ", data_dir))
+    download_aer_data(data_dir)
   }
 
   # Column Names are sourced from the official layout doucument
