@@ -90,8 +90,15 @@ download_aer_data <- function(data_dir = "data/") {
       download.file(missing_file_urls[[i]], stringr::str_c(data_dir, missing_file_names[[i]]))
 
       # The WellList.txt file comes inside a zip archive. The WellList.txt file needs to be extracted.
-      if (names(missing_file_urls)[[i]] == "well_list")
-        unzip(stringr::str_c(data_dir, missing_file_names[[i]]), exdir = data_dir, junkpaths = TRUE)
+      if (names(missing_file_urls)[[i]] == "well_list") {
+
+        # Windows can't handle trailing slashes on directory names so we need to check for those
+        exdir_name <- data_dir
+        if ((.Platform$OS.type == "windows") && (grepl("*/$|*\\\\$", data_dir))) {
+          exdir_name <- stringr::str_sub(data_dir, 1, stringr::str_length(data_dir) - 1)
+        }
+        unzip(stringr::str_c(data_dir, missing_file_names[[i]]), exdir = exdir_name, junkpaths = TRUE)
+      }
     }
   } else {
     prompt_user_to_download(data_dir)
