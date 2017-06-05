@@ -87,7 +87,7 @@ download_aer_data <- function(data_dir = "data/") {
     missing_file_urls <- data_file_urls[missing_files]
 
     for (i in 1:length(missing_file_urls)) {
-      download.file(missing_file_urls[[i]], stringr::str_c(data_dir, missing_file_names[[i]]))
+      download.file(missing_file_urls[[i]], stringr::str_c(data_dir, missing_file_names[[i]]), method = "auto", mode = "wb")
 
       # The WellList.txt file comes inside a zip archive. The WellList.txt file needs to be extracted.
       if (names(missing_file_urls)[[i]] == "well_list") {
